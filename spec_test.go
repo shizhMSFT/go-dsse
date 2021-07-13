@@ -127,6 +127,7 @@ func benchmarkPAE(b *testing.B, size int64) {
 	if err != nil {
 		b.Fatal(err)
 	}
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		PAE(payloadType, payload)
 	}
