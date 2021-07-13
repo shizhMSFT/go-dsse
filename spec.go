@@ -1,19 +1,40 @@
 package dsse
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"strconv"
 )
+
+// Bytes wraps []byte for JSON serialization.
+type Bytes []byte
+
+// UnmarshalJSON accepts either standard or URL-safe base64 encodings
+func (b *Bytes) UnmarshalJSON(data []byte) error {
+	var src string
+	if err := json.Unmarshal(data, &src); err != nil {
+		return err
+	}
+	dst, err := base64.StdEncoding.DecodeString(src)
+	if err != nil {
+		if dst, err = base64.URLEncoding.DecodeString(src); err != nil {
+			return err
+		}
+	}
+	*b = dst
+	return nil
+}
 
 // Signature stores a detached signature.
 type Signature struct {
 	KeyID     string `json:"kid,omitempty"`
-	Signature []byte `json:"sig"`
+	Signature Bytes  `json:"sig"`
 }
 
 // Envelope holds the payload and signautres.
 // Reference: https://github.com/secure-systems-lab/dsse/blob/master/envelope.md
 type Envelope struct {
-	Payload     []byte      `json:"payload"`
+	Payload     Bytes       `json:"payload"`
 	PayloadType string      `json:"payloadType"`
 	Signatures  []Signature `json:"signatures"`
 }
